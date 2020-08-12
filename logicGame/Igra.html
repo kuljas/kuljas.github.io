@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+        <title>Logic game</title>
+        <link href="css/styles.css" rel="stylesheet" />
+        <script type="text/javascript" src="wee.js"></script>
+    </head>
+    
+<body onload="drawLevelDOM('3 x 3',0)">
+<div class="container-fluid">
+<div class="row">
+    <div class="col-sm-4 col-lg-4">
+        
+    </div>
+    <div class="col-sm-4 col-lg-4 text-center">
+        <h5 id="currentLevel" class="text-left pt-3"></h5>
+        <h4 class="mb-5 pt-3">Current Formula: <span id="zadavanje"></span></h4>
+        <h5 id='solution'></h5>
+        <div id='fields'> 
+        </div>
+        <h4 class="pt-3">Click on every field that satisfies current formula.</h4>
+    </div>
+    <div class="col-sm-4 col-lg-4">
+    </div>
+</div>    
+</div>
+
+</body>
+</html>
