@@ -1,6 +1,6 @@
 const size=3;
-const colors = ["red","green","blue","purple"];
-const numbers = ["1","2","3","4"];
+const colors = ["red","green","blue"];
+const numbers = ["1","2","3"];
 var levels = createLevels();
 
 function createLevels(){
@@ -31,10 +31,10 @@ class Field{
         return check;
     }
     isSolution(formula){
-        let veznik = formula.getVeznik;
-          if (veznik == "and")
+                let connector = formula.getConnector;
+                    if (connector == "and")
             return this.appropriateNumber(formula) && this.appropriateColor(formula);
-        else if (veznik == "or" || veznik == undefined)
+                else if (connector == "or" || connector == undefined)
             return this.appropriateNumber(formula) || this.appropriateColor(formula);
     }
 }
@@ -56,7 +56,7 @@ class Formula{
         else
             return words[0];
     }
-    get getVeznik(){
+    get getConnector(){
         let words = this.getWords;
         if (words[0] == "not")
             return words[2];
@@ -77,7 +77,7 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
 }
 
-function numberOfFiledsInSolution(formula){
+function numberOfFieldsInSolution(formula){
     let num = 0;
     let fields = createFields(size,colors);
     for (let i=0; i<fields.length; i++){
@@ -89,9 +89,45 @@ function numberOfFiledsInSolution(formula){
 
 var currentLevelSize=0;
 var currentLevel=0;
+var levelTimerId = null;
+var remainingTime = 0;
+var levelCompleted = false;
 
-const formule = levels.map(x => new Formula(x))
-const numberInSolution = formule.map(x => numberOfFiledsInSolution(x));
+const formulas = levels.map(x => new Formula(x))
+const numberInSolution = formulas.map(x => numberOfFieldsInSolution(x));
+
+function getLevelTimeLimit(levelIndex){
+    const levelLimits = [20, 18, 16, 14, 12, 10, 10];
+    if (levelIndex < levelLimits.length)
+        return levelLimits[levelIndex];
+    return 10;
+}
+
+function updateTimerDOM(){
+    const timer = document.getElementById('timer');
+    timer.innerHTML = "Time left: " + remainingTime.toString() + "s";
+}
+
+function stopLevelTimer(){
+    if (levelTimerId !== null){
+        clearInterval(levelTimerId);
+        levelTimerId = null;
+    }
+}
+
+function startLevelTimer(table, levelIndex){
+    stopLevelTimer();
+    remainingTime = getLevelTimeLimit(levelIndex);
+    updateTimerDOM();
+    levelTimerId = setInterval(function(){
+        remainingTime--;
+        updateTimerDOM();
+        if (remainingTime <= 0){
+            stopLevelTimer();
+            drawSolutionDOM(table, levelIndex, "Time is up. This is a solution:");
+        }
+    }, 1000);
+}
 
 function createFields(numberInRow,colors){
     let fields=[];
@@ -122,19 +158,29 @@ function createTable(tableSize,colors){
 }
 
 function drawLevelDOM(tableSize,currentLevel){
+    if (currentLevel >= levels.length){
+        const solution = document.getElementById('solution');
+        solution.innerHTML="You won all levels!";
+        const timer = document.getElementById('timer');
+        timer.innerHTML = "Completed";
+        return;
+    }
+
+    levelCompleted = false;
     currentLevelSize=0;
     document.getElementById('currentLevel').innerHTML="Level: "+(currentLevel+1).toString();
-    const zadaj = document.getElementById('zadavanje');
-    zadaj.innerHTML=levels[currentLevel];
+    const formulaDisplay = document.getElementById('formulaDisplay');
+    formulaDisplay.innerHTML=levels[currentLevel];
+    document.getElementById('solution').innerHTML="";
     let numberOfRows = parseInt(tableSize[0]);
     let table = createTable(tableSize,colors);
     const div = document.getElementById('fields');
     for (let i=0; i<numberOfRows; i++){
-        const paragraf = document.createElement('p');
-        div.appendChild(paragraf);
+        const paragraph = document.createElement('p');
+        div.appendChild(paragraph);
         for (let j=0; j<numberOfRows; j++){
             let button = document.createElement("BUTTON");
-            paragraf.appendChild(button);
+            paragraph.appendChild(button);
         }
     }
     const buttons = document.querySelectorAll("button");
@@ -144,6 +190,7 @@ function drawLevelDOM(tableSize,currentLevel){
         buttons[i].setAttribute("class",color);
         buttons[i].innerHTML = number;
     }
+    startLevelTimer(table, currentLevel);
     addEvents(buttons,table,currentLevel);
 }
 
@@ -161,20 +208,25 @@ function multipleRemove(buttons){
 }
 
 function check(i,table,currentLevel){
+    if (levelCompleted)
+        return;
+
     const buttons = document.querySelectorAll("button");
-    if (table[i].isSolution(formule[currentLevel])){
+    if (table[i].isSolution(formulas[currentLevel])){
         currentLevelSize++;
         pressedButtonStyle(buttons[i],table[i]);
         buttons[i].disabled = true;
         if (currentLevelSize==numberInSolution[currentLevel]){
+            levelCompleted = true;
+            stopLevelTimer();
             currentLevel++;
             multipleRemove(buttons);
             drawLevelDOM('3 x 3',currentLevel);
         }
     }
     else{
-        console.log(currentLevel);
-        drawSolutionDOM(table,currentLevel);
+        stopLevelTimer();
+        drawSolutionDOM(table,currentLevel,"You Lost. This is a solution:");
     }
 }
 
@@ -184,12 +236,13 @@ function pressedButtonStyle(button,table){
     button.style.backgroundColor="white";
 }
 
-function drawSolutionDOM(table,currentLevel){
+function drawSolutionDOM(table,currentLevel,message){
+    levelCompleted = true;
     const solution = document.getElementById('solution');
-    solution.innerHTML="You Lost. This is a solution:";
+    solution.innerHTML=message;
     const buttons = document.querySelectorAll("button");
     for(let i=0;i<table.length;i++){
-        if (table[i].isSolution(formule[currentLevel])){
+        if (table[i].isSolution(formulas[currentLevel])){
             pressedButtonStyle(buttons[i],table[i])
             buttons[i].disabled = true;
         }
